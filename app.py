@@ -6,10 +6,10 @@ app = Flask(__name__)
 
 # Cloud SQL connection config
 db_config = {
-    'user': os.environ.get("DB_USER"),
-    'password': os.environ.get("DB_PASS"),
-    'host': os.environ.get("DB_HOST"),
-    'database': os.environ.get("DB_NAME"),
+    'user': os.environ.get("vamsi"),
+    'password': os.environ.get("Svamsi79955"),
+    'host': os.environ.get("34.81.37.59"),
+    'database': os.environ.get("jenkins"),
     'port': 3306
 }
 
