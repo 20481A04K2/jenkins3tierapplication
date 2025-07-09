@@ -2,10 +2,13 @@ pipeline {
   agent any
 
   environment {
-    PROJECT_ID = 'your-gcp-project-id'      // 🔁 Change this
-    IMAGE_NAME = 'flask-app'
+    PROJECT_ID = 'sylvan-hydra-464904-d9'
     REGION = 'us-central1'
-    SONAR_SCANNER_HOME = '/opt/sonar-scanner'
+    REPOSITORY = 'flask-app-repo'
+    IMAGE_NAME = 'flask-app'
+    IMAGE_TAG = 'latest'
+    AR_URL = "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}"
+    SONAR_SCANNER_HOME = tool 'Default Sonar Scanner'
   }
 
   stages {
@@ -33,18 +36,16 @@ pipeline {
 
     stage('Build Docker Image') {
       steps {
-        sh """
-          docker build -t gcr.io/$PROJECT_ID/$IMAGE_NAME .
-        """
+        sh "docker build -t $AR_URL ."
       }
     }
 
-    stage('Authenticate & Push to Artifact Registry') {
+    stage('Push to Artifact Registry') {
       steps {
         sh """
           gcloud config set project $PROJECT_ID
-          gcloud auth configure-docker --quiet
-          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME
+          gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+          docker push $AR_URL
         """
       }
     }
@@ -53,11 +54,10 @@ pipeline {
       steps {
         sh """
           gcloud run deploy $IMAGE_NAME \
-            --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
+            --image $AR_URL \
             --platform=managed \
             --region=$REGION \
-            --allow-unauthenticated \
-            --set-env-vars DB_USER=root,DB_PASS=password,DB_HOST=xxx.xxx.xxx.xxx,DB_NAME=mydb
+            --allow-unauthenticated
         """
       }
     }
